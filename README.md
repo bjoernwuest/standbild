@@ -258,9 +258,9 @@ Gemessen im Container auf einer VM mit 8 CPU-Kernen ohne GPU (`large-v3-turbo`, 
 
 | Video | Auflösung | Download | Bildwechsel | Transkription | gesamt | Screenshots | Paket |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| 4:31 min, Live-Demo | 1280×706 | 10 s | 15 s | 2:03 min | 2:15 min | 23 | 5,9 MB |
-| 4:23 min, Folien | 1920×1080 | 9 s | 13 s | 2:24 min | 2:35 min | 6 | 3,8 MB |
-| 15:43 min, Folien + Demo | 1920×1080 | 12 s | 2:20 min | 5:32 min | 5:45 min | 57 | 26 MB |
+| 4:31 min, Live-Demo | 1280×706 | 8 s | 24 s | 2:00 min | 2:08 min | 23 | 5,7 MB |
+| 4:23 min, Folien | 1920×1080 | 8 s | 13 s | 2:17 min | 2:24 min | 6 | 3,6 MB |
+| 15:43 min, Folien + Demo | 1920×1080 | 10 s | 54 s | 4:43 min | 4:54 min | 57 | 25 MB |
 
 Bildwechsel-Erkennung und Transkription laufen parallel; die Transkription bestimmt die Dauer (etwa ein
 Drittel bis die Hälfte der Videolänge). Whisper nutzt 4 Threads; mehr Kerne lassen sich mit `OMP_NUM_THREADS`
