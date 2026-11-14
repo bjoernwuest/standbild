@@ -39,6 +39,16 @@ frühere Bild. Markdown-Viewer wie Obsidian, VS Code oder GitHub zeigen die Bild
 
 ## Bauen und Bereitstellen
 
+Fertige Images liegen in der GitHub Container Registry. Die Action [`release.yml`](.github/workflows/release.yml)
+baut bei jeder Änderung an Code oder Dockerfile auf `main` (oder von Hand über „Run workflow“) ein Image und
+veröffentlicht es unter der Version `YYYY-MM-DD_hhmmss` (UTC) und als `latest`:
+
+```bash
+docker pull ghcr.io/bjoernwuest/standbild:latest
+```
+
+Selbst bauen und in eine eigene Registry schieben:
+
 ```bash
 make build REGISTRY=registry.local:5000     # baut :<Version aus pyproject.toml> und :latest
 make push  REGISTRY=registry.local:5000
