@@ -1,0 +1,45 @@
+# AGENTS.md – So ist dieses Paket zu lesen
+
+- **Titel:** {{ title }}
+- **Kanal:** {{ channel or "unbekannt" }}
+- **Quelle:** {{ url }}
+- **Dauer:** {{ duration }}
+- **Sprache:** {{ language }}
+- **Verarbeitet am:** {{ generated }}
+- **Screenshots:** {{ screenshots }}
+
+## Was das Paket ist
+
+Ein Software-Erklärvideo, zerlegt in gesprochenen Text und Bildschirmzustände. Das Transkript enthält an
+jeder relevanten Bildänderung einen Verweis auf einen Screenshot in Originalauflösung.
+
+## Dateien
+
+| Pfad | Inhalt | Lesen? |
+| --- | --- | --- |
+| `transcript.md` | Transkript mit `>>>>>`-Bildverweisen | Pflicht |
+| `frames/` | Screenshots als PNG, verlustfrei | Pflicht |
+| `meta.json` | Video-Metadaten, Kapitelmarken, verwendete Parameter | bei Bedarf |
+| `log/` | Verarbeitungsprotokoll und Messwerte der Bilderkennung | nur zur Fehlersuche |
+
+## Lesart der Markierung
+
+Eine Zeile `>>>>> ![frame_NNNN · hh:mm:ss](frames/…)` bedeutet: Ab dieser Stelle zeigt der Bildschirm das
+verlinkte Bild, bis zur nächsten Markierung. `[hh:mm:ss]` am Absatzanfang ist die Position im Video.
+Verweist eine Markierung auf ein früheres Bild, kehrt das Video zu dieser Ansicht zurück.
+
+## Hinweise zur Auswertung
+
+- Der Sprecher bezieht sich oft auf Sichtbares („hier“, „dieser Button“). Die Bedeutung ergibt sich aus dem
+  Bild an der vorherigen Markierung.
+- Menüpfade, Code, Einstellungen und Werte stehen oft nur im Bild und werden nicht ausgesprochen. Die Bilder
+  sind daher gleichwertig mit dem Text.
+- Das Transkript stammt von {{ "manuell erstellten Untertiteln" if from_subtitles else "einer automatischen Spracherkennung" }}.
+  Fachbegriffe, Produktnamen und Befehle können falsch geschrieben sein; die Schreibweise im Bild hat Vorrang.
+- Die Screenshots sind automatisch ausgewählt. Kurze Zwischenzustände (Animationen, Scrollen) können fehlen.
+- Kapitelmarken aus `meta.json` können zur Gliederung genutzt werden{{ "" if chapters else " (dieses Video hat keine)" }}.
+
+## Empfohlenes Vorgehen
+
+`transcript.md` von oben nach unten lesen und an jeder Markierung das Bild ansehen, bevor der folgende Text
+interpretiert wird.

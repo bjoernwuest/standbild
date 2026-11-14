@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>standbild</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <header>
+    <h1>standbild</h1>
+    <nav role="tablist" aria-label="Bereiche">
+      <button role="tab" aria-selected="true" aria-controls="videos" data-tab="videos">Videos</button>
+      <button role="tab" aria-selected="false" aria-controls="models" data-tab="models">Modelle</button>
+    </nav>
+  </header>
+  <main>
+    <section id="videos" role="tabpanel">
+      <label for="url">YouTube-Link einfügen</label>
+      <input id="url" type="text" inputmode="url" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off" autofocus>
+      <div id="card" aria-live="polite"></div>
+      <details id="params" hidden>
+        <summary>Parameter</summary>
+        <p id="params-note" class="note"></p>
+        <form id="params-form" novalidate>
+          <div id="fields" class="fields"></div>
+          <button type="button" id="reset" class="secondary">Auf Voreinstellungen zurücksetzen</button>
+        </form>
+      </details>
+      <h2>Letzte Aufträge</h2>
+      <table id="recent">
+        <thead><tr><th>Titel</th><th>Status</th><th>Datum</th><th><span class="sr">Download</span></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+    <section id="models" role="tabpanel" hidden>
+      <table id="model-list">
+        <thead><tr><th>Name</th><th>Quelle</th><th>Größe</th><th>Status</th><th><span class="sr">Aktionen</span></th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <h2>Modell hinzufügen</h2>
+      <form id="model-form">
+        <label for="model-url">HuggingFace-Link oder Repo-ID (CTranslate2-Format für faster-whisper)</label>
+        <input id="model-url" required placeholder="Systran/faster-whisper-medium" autocomplete="off">
+        <label for="model-name">Name</label>
+        <input id="model-name" placeholder="wird aus dem Repo-Namen abgeleitet" autocomplete="off">
+        <button>Hinzufügen</button>
+        <p id="model-error" class="error" role="alert"></p>
+      </form>
+    </section>
+  </main>
+  <footer>standbild {{ version }} · <a href="/api/docs">REST-API</a> · MCP unter <code>/mcp</code></footer>
+  <script src="/static/app.js"></script>
+</body>
+</html>

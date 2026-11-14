@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "standbild"
+version = "1.0.0"
+description = "Erklärvideos zu Transkript + Screenshots – lokal, ohne große KI"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "yt-dlp[default]",
+    "faster-whisper>=1.1",
+    "huggingface_hub",
+    "opencv-python-headless",
+    "numpy",
+    "scikit-image",
+    "imagehash",
+    "fastapi",
+    "uvicorn",
+    "jinja2",
+    "mcp>=1.12",
+    "psycopg[binary,pool]>=3.2",
+    "typer",
+    "pydantic-settings",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+    "httpx",
+    "testcontainers[postgres]",
+]
+
+[project.scripts]
+standbild = "standbild.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/standbild"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: lädt ein Whisper-Modell und transkribiert (Netzwerk beim ersten Lauf)"]
+addopts = "-m 'not slow'"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008", "E501"]  # typer/FastAPI-Defaults sind Funktionsaufrufe; Zeilenlänge regelt der Formatter
+
+[tool.mypy]
+strict = true
+files = ["src"]
+
+[[tool.mypy.overrides]]
+module = ["yt_dlp.*", "faster_whisper.*", "ctranslate2.*", "imagehash.*", "skimage.*", "matplotlib.*", "huggingface_hub.*", "tqdm.*"]
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:"]

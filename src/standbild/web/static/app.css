@@ -1,0 +1,54 @@
+:root {
+  --bg: #f6f7f9; --panel: #fff; --text: #1c2330; --muted: #5d6778; --line: #d5dae2;
+  --accent: #1f5fbf; --accent-text: #fff; --error: #b3261e; --ok: #1b7a43;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #14171c; --panel: #1d2128; --text: #e6e9ee; --muted: #9aa4b4; --line: #343a45;
+          --accent: #6ea2f0; --accent-text: #10141a; --error: #ff8a80; --ok: #6fcf97; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: var(--bg); color: var(--text); }
+header, main, footer { max-width: 56rem; margin: 0 auto; padding: 1rem; }
+header { display: flex; align-items: baseline; gap: 1.5rem; flex-wrap: wrap; }
+h1 { font-size: 1.4rem; margin: 0; }
+h2 { font-size: 1.05rem; margin: 2rem 0 .5rem; }
+footer { color: var(--muted); font-size: .85rem; }
+a { color: var(--accent); }
+nav button { background: none; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: .3rem .2rem; margin-right: 1rem; font: inherit; cursor: pointer; }
+nav button[aria-selected="true"] { color: var(--text); border-color: var(--accent); }
+label { display: block; font-weight: 600; margin: .8rem 0 .25rem; }
+input, select, textarea { width: 100%; padding: .5rem .6rem; font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+input[type="checkbox"] { width: auto; }
+input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#url { font-size: 1.1rem; padding: .7rem .8rem; }
+button, a.button { display: inline-block; padding: .5rem 1rem; font: inherit; font-weight: 600; text-decoration: none; border: 1px solid var(--accent); border-radius: 6px; background: var(--accent); color: var(--accent-text); cursor: pointer; }
+button.secondary { background: none; color: var(--accent); }
+button.link { border: 0; background: none; color: var(--accent); padding: 0; font-weight: 400; text-align: left; }
+button:disabled { opacity: .5; cursor: default; }
+.card:not(:empty), details#params { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-top: 1rem; }
+.card { display: grid; grid-template-columns: auto 1fr; gap: 0 1rem; }
+.card > * { grid-column: 2; margin: 0 0 .5rem; }
+.card > img { grid-column: 1; grid-row: 1 / span 6; width: 160px; border-radius: 4px; }
+.card h3 { font-size: 1.1rem; }
+.card dl { display: grid; grid-template-columns: auto 1fr; gap: .1rem 1rem; }
+.card dt { color: var(--muted); }
+.card dd { margin: 0; }
+.card pre { font-size: .8rem; overflow-x: auto; }
+.actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: .5rem; }
+progress { width: 100%; height: .8rem; accent-color: var(--accent); }
+.error { color: var(--error); }
+.note, .hint { color: var(--muted); font-size: .85rem; margin: .2rem 0; }
+.fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0 1.2rem; margin-bottom: 1rem; }
+.fields label { font-family: ui-monospace, monospace; font-size: .9rem; }
+.fields .error { font-size: .85rem; min-height: 1.2em; margin: 0; }
+summary { cursor: pointer; font-weight: 600; }
+table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); }
+th, td { text-align: left; padding: .45rem .6rem; border-top: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-size: .85rem; border-top: 0; }
+td .secondary { padding: .15rem .5rem; font-size: .85rem; margin: 0 .3rem .2rem 0; }
+.badge { font-size: .8rem; padding: .05rem .4rem; border: 1px solid var(--ok); color: var(--ok); border-radius: 99px; margin-left: .4rem; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 40rem) { .card { display: block; } .card > img { width: 100%; max-width: 320px; } }
+#model-list td:nth-child(1), #model-list td:nth-child(3), #model-list td:nth-child(4):not(.error) { white-space: nowrap; }
+form > button { margin-top: .8rem; }
