@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 from test_models import CT2, hf, wait_for
 
 from standbild.config import get_settings
+from standbild.db.pool import get_pool
 from standbild.web.app import create_app
 
 URL = "https://youtu.be/aaaaaaaaaaa"
@@ -41,7 +42,10 @@ def test_page_assets_health_and_docs(client: TestClient) -> None:
         client.get("/static/app.js").status_code == 200 and client.get("/static/app.css").status_code == 200
     )
     health = client.get("/healthz").json()
-    assert health["status"] == "ok" and health["checks"]["db"] is True and len(health["checks"]) == 4
+    assert health["status"] == "ok" and all(health["checks"].values())
+    assert {"db", "workers", "model"} <= set(health["checks"]) and len(
+        health["checks"]
+    ) == 6  # plus drei Volumes
     paths = client.get("/api/openapi.json").json()["paths"]
     assert {"/api/videos/lookup", "/api/defaults", "/api/jobs", "/api/jobs/{job_id}", "/api/jobs/{job_id}/package", "/api/models",
             "/api/models/{name}", "/api/models/{name}/default", "/healthz"} <= set(paths)  # fmt: skip
@@ -257,3 +261,31 @@ def test_start_fails_on_invalid_parameter_environment(db: str, monkeypatch: pyte
     with pytest.raises(ValueError, match="threshold: Ungültiger Wert – erlaubt: 0.001 bis 0.9"):
         with TestClient(create_app(pipeline=fake_pipeline)):
             pass
+
+
+def test_health_names_each_failing_check(client: TestClient, env: Path) -> None:
+    def failing() -> list[str]:
+        res = client.get("/healthz")
+        body = res.json()
+        assert (res.status_code == 200) == (body["status"] == "ok") and res.status_code in (200, 503)
+        return [k for k, v in body["checks"].items() if not v]
+
+    assert failing() == []
+    (env / "models" / "default.txt").unlink()  # Standardmodell fehlt: jeder Auftrag würde scheitern
+    assert failing() == ["model"]
+    (env / "models" / "default.txt").write_text("large-v3-turbo")
+    assert failing() == []
+    with (
+        get_pool().connection() as conn
+    ):  # Verbindung steht, aber die Tabelle ist weg (Schema gelöscht, Rechte entzogen)
+        conn.execute("DROP TABLE jobs")
+    assert failing() == ["db"]
+
+
+def test_health_detects_dead_worker_thread(db: str, monkeypatch: pytest.MonkeyPatch) -> None:
+    from standbild import worker
+
+    monkeypatch.setattr(worker.Workers, "_work", lambda self: None)  # Worker-Thread endet sofort
+    with TestClient(create_app(pipeline=fake_pipeline)) as client:
+        wait_for(lambda: client.get("/healthz").status_code == 503)
+        assert client.get("/healthz").json()["checks"]["workers"] is False

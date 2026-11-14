@@ -146,11 +146,20 @@ class Workers:
         self.pipeline = pipeline
         self.stop = threading.Event()
         self.current: set[Any] = set()
+        self.threads: list[threading.Thread] = []
 
     def start(self) -> None:
-        for i in range(get_settings().workers):
-            threading.Thread(target=self._work, daemon=True, name=f"worker-{i}").start()
-        threading.Thread(target=self._maintain, daemon=True, name="maintenance").start()
+        n = get_settings().workers
+        self.threads = [
+            threading.Thread(target=self._work, daemon=True, name=f"worker-{i}") for i in range(n)
+        ]
+        self.threads.append(threading.Thread(target=self._maintain, daemon=True, name="maintenance"))
+        for t in self.threads:
+            t.start()
+
+    def alive(self) -> bool:
+        """Für den Healthcheck: Kein Worker- oder Wartungs-Thread ist abgestürzt."""
+        return all(t.is_alive() for t in self.threads)
 
     def _work(self) -> None:
         while not self.stop.is_set():

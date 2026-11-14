@@ -4,6 +4,7 @@ import re
 import zipfile
 from pathlib import Path
 
+import pytest
 from test_detect import hold, slide, write_video
 from typer.testing import CliRunner
 
@@ -56,3 +57,42 @@ def test_migrate_and_preview_by_job_id(db: str) -> None:
     assert result.exit_code == 0 and "Schema ist aktuell" in result.output
     unknown = runner.invoke(app, ["preview", "00000000-0000-0000-0000-000000000000"])
     assert unknown.exit_code == 1 and "Weder ZIP-Datei noch fertige Verarbeitungs-ID" in unknown.output
+
+
+def test_healthcheck_against_running_server(db: str, env: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Docker-HEALTHCHECK: Exit-Code 0 bei 200, 1 bei 503 (mit JSON der Prüfungen), 1 ohne laufenden Dienst."""
+    import json
+    import socket
+    import threading
+    import time
+
+    import uvicorn
+    from conftest import fake_pipeline
+
+    from standbild.config import get_settings
+    from standbild.web.app import create_app
+
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+    monkeypatch.setenv("STANDBILD_PORT", str(port))
+    get_settings.cache_clear()
+    server = uvicorn.Server(uvicorn.Config(create_app(pipeline=fake_pipeline), port=port, log_config=None))
+    thread = threading.Thread(target=server.run, daemon=True)
+    thread.start()
+    try:
+        end = time.time() + 20
+        while not server.started:
+            assert time.time() < end and thread.is_alive(), "Server startet nicht"
+            time.sleep(0.05)
+        healthy = runner.invoke(app, ["healthcheck"])
+        assert healthy.exit_code == 0, healthy.output
+        assert json.loads(healthy.output)["status"] == "ok"
+        (env / "models" / "default.txt").unlink()
+        sick = runner.invoke(app, ["healthcheck"])
+        assert sick.exit_code == 1 and json.loads(sick.output)["checks"]["model"] is False
+    finally:
+        server.should_exit = True
+        thread.join(10)
+    down = runner.invoke(app, ["healthcheck"])
+    assert down.exit_code == 1 and f"127.0.0.1:{port}/healthz nicht erreichbar" in down.output

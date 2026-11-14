@@ -64,7 +64,28 @@ def serve() -> None:
     s = get_settings()
     if s.ytdlp_autoupdate:
         _update_ytdlp(s.tmp_dir / "yt-dlp")
+    # Der Docker-Healthcheck fragt alle 30 s: erfolgreiche Abfragen nicht ins Zugriffsprotokoll schreiben
+    logging.getLogger("uvicorn.access").addFilter(
+        lambda r: not ("GET /healthz " in r.getMessage() and '" 200' in r.getMessage())
+    )
     uvicorn.run(create_app(), host="0.0.0.0", port=s.port, log_level=s.log_level.lower())
+
+
+@app.command()
+def healthcheck() -> None:
+    """Fragt /healthz des laufenden Dienstes ab (Docker-HEALTHCHECK). Exit-Code 0 = gesund."""
+    import urllib.error
+    import urllib.request
+
+    url = f"http://127.0.0.1:{get_settings().port}/healthz"
+    try:
+        with urllib.request.urlopen(url, timeout=4) as res:
+            typer.echo(res.read().decode())
+    except urllib.error.HTTPError as exc:  # 503: die Antwort nennt die fehlgeschlagenen Prüfungen
+        typer.echo(exc.read().decode())
+        raise typer.Exit(1) from None
+    except OSError as exc:  # Dienst läuft nicht oder antwortet nicht
+        raise _fail(f"{url} nicht erreichbar: {exc}") from None
 
 
 @app.command()

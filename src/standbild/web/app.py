@@ -102,6 +102,8 @@ def create_app(pipeline: worker.Pipeline = run_pipeline, run_workers: bool = Tru
         transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
     )
 
+    workers = worker.Workers(pipeline)
+
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         for d in volumes:
@@ -116,7 +118,6 @@ def create_app(pipeline: worker.Pipeline = run_pipeline, run_workers: bool = Tru
         for part in s.packages_dir.glob("*.zip.part"):  # Reste abgebrochener Paketierung
             if time.time() - part.stat().st_mtime > 3600:
                 part.unlink(missing_ok=True)
-        workers = worker.Workers(pipeline)
         if run_workers:
             workers.start()
         log.info("standbild %s bereit – Modelle: %s", __version__, ", ".join(models.installed()) or "keine")
@@ -155,14 +156,18 @@ def create_app(pipeline: worker.Pipeline = run_pipeline, run_workers: bool = Tru
 
     @app.get("/healthz")
     def healthz() -> JSONResponse:
-        """Lebenszeichen inkl. DB-Verbindung und beschreibbarer Volumes."""
+        """Healthcheck: Volumes beschreibbar, Tabelle jobs lesbar, Worker laufen, Standardmodell installiert.
+        200 = gesund, 503 = mindestens eine Prüfung fehlgeschlagen. Ohne Anmeldung erreichbar."""
         checks = {str(d): writable(d) for d in volumes}
         try:
             with get_pool().connection(timeout=3) as conn:
-                conn.execute("SELECT 1")
+                conn.execute("SELECT 1 FROM jobs LIMIT 1")  # Verbindung, Schema und Rechte in einem
             checks["db"] = True
-        except Exception:
+        except Exception as exc:
+            log.warning("Healthcheck: Datenbank nicht nutzbar: %s", str(exc).strip().splitlines()[0][:200])
             checks["db"] = False
+        checks["workers"] = workers.alive()
+        checks["model"] = models.default_model() is not None
         ok = all(checks.values())
         return JSONResponse({"status": "ok" if ok else "error", "checks": checks}, 200 if ok else 503)
 

@@ -47,6 +47,6 @@ ENV PATH=/opt/venv/bin:$PATH \
 USER standbild
 EXPOSE 8080
 VOLUME ["/tmp", "/data/packages", "/models"]
-HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=3 \
-  CMD python -c "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:%s/healthz' % os.environ.get('STANDBILD_PORT', '8080'), timeout=4)"
+# Ausgabe (JSON mit allen Prüfungen) steht in: docker inspect --format '{{json .State.Health}}' standbild
+HEALTHCHECK --interval=30s --timeout=5s --start-period=180s --retries=3 CMD ["standbild", "healthcheck"]
 CMD ["standbild", "serve"]
